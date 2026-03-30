@@ -1,21 +1,22 @@
-// Stack e configurazioni (Invariati)
 const baseStack = ["4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠", "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥", "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣", "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠", "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣", "A♥", "9♦"];
 const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const suits = ["♣", "♥", "♦", "♠"];
-const rankNames = { "asso": "A", "1": "A", "due": "2", "2": "2", "tre": "3", "3": "3", "quattro": "4", "4": "4", "cinque": "5", "5": "5", "sei": "6", "6": "6", "sette": "7", "7": "7", "otto": "8", "8": "8", "nove": "9", "9": "9", "dieci": "10", "10": "10", "fante": "J", "jack": "J", "donna": "Q", "regina": "Q", "re": "K", "k": "K" };
+const rankNames = { 
+    "asso": "A", "1": "A", "due": "2", "2": "2", "tre": "3", "3": "3", 
+    "quattro": "4", "4": "4", "cinque": "5", "5": "5", "sei": "6", "6": "6", 
+    "sette": "7", "7": "7", "otto": "8", "8": "8", "nove": "9", "9": "9", 
+    "dieci": "10", "10": "10", "fante": "J", "jack": "J", "donna": "Q", 
+    "regina": "Q", "re": "K", "k": "K" 
+};
 const suitNames = { "fiori": "♣", "cuori": "♥", "quadri": "♦", "picche": "♠" };
 
 let targetR = "A", targetS = "♠", bottomR = "9", bottomS = "♦";
 let running = false, startTime, elapsed = 0, timerInterval, hasStopped = false;
+let recognition; // Variabile globale per gestire il microfono
 
 const startBtn = document.getElementById('start-btn');
 const lapBtn = document.getElementById('lap-btn');
 const timerDisplay = document.getElementById('timer-display');
-
-// Caricamento dinamico della libreria Annyang per bypassare il "ding" di sistema
-const script = document.createElement('script');
-script.src = "https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js";
-document.head.appendChild(script);
 
 function calculatePos() {
     try {
@@ -25,61 +26,20 @@ function calculatePos() {
         const rotated = [...baseStack.slice(idxB + 1), ...baseStack.slice(0, idxB + 1)];
         const pos = rotated.indexOf(t) + 1;
         document.getElementById('live-pos-code').innerText = "v. 2.0." + pos;
-        console.log(">>> Nuova Posizione Calcolata:", pos);
         return pos;
     } catch(e) { return 0; }
 }
+
+function togglePanel() { document.getElementById('secret-panel').classList.toggle('open'); }
 
 function updateGridActive(containerId, value) {
     const container = document.getElementById(containerId);
     if (!container) return;
     const targetValue = value.toString().trim().toUpperCase();
     Array.from(container.children).forEach(btn => {
-        btn.classList.toggle('active', btn.innerText.trim().toUpperCase() === targetValue);
+        const btnText = btn.innerText.trim().toUpperCase();
+        btn.classList.toggle('active', btnText === targetValue);
     });
-}
-
-// Funzione di ascolto con Annyang (Tenta di forzare il canale audio "puro")
-function startSilentListening() {
-    if (window.annyang) {
-        console.log(">>> Annyang pronto. Avvio ascolto silenzioso...");
-        
-        // Definiamo i comandi (opzionale, noi useremo il catch-all per flessibilità)
-        annyang.setLanguage('it-IT');
-        
-        annyang.addCallback('result', function(phrases) {
-            const text = phrases[0].toLowerCase();
-            console.log(">>> Audio captato (Raw):", text);
-            
-            let found = false;
-            for (let key in rankNames) {
-                if (text.includes(key)) {
-                    targetR = rankNames[key];
-                    updateGridActive('target-ranks', targetR);
-                    console.log(">>> Valore riconosciuto:", targetR);
-                    found = true;
-                }
-            }
-            for (let key in suitNames) {
-                if (text.includes(key)) {
-                    targetS = suitNames[key];
-                    updateGridActive('target-suits', targetS);
-                    console.log(">>> Seme riconosciuto:", targetS);
-                    found = true;
-                }
-            }
-            if (found) {
-                calculatePos();
-                timerDisplay.style.opacity = "0.5";
-                setTimeout(() => timerDisplay.style.opacity = "1", 100);
-            }
-        });
-
-        // Forza l'avvio senza i feedback audio di sistema se possibile
-        annyang.start({ autoRestart: true, continuous: true });
-    } else {
-        console.error(">>> Errore: Libreria audio non caricata.");
-    }
 }
 
 startBtn.onclick = function() {
@@ -90,9 +50,7 @@ startBtn.onclick = function() {
         this.innerText = "Stop"; this.classList.add('stop');
         lapBtn.innerText = "Giro"; lapBtn.classList.add('active');
         hasStopped = false;
-        
-        // Avvio ascolto
-        startSilentListening();
+        startListening();
     } else {
         running = false;
         clearInterval(timerInterval);
@@ -100,9 +58,10 @@ startBtn.onclick = function() {
         lapBtn.innerText = "Ripristina";
         hasStopped = true;
         
-        if (window.annyang) {
-            annyang.abort();
-            console.log(">>> Microfono disattivato.");
+        // --- STOP DELLA REGISTRAZIONE VOCALE ---
+        if (recognition) {
+            recognition.stop();
+            console.log("Microfono spento.");
         }
         
         applySmartForce();
@@ -155,6 +114,66 @@ function applySmartForce() {
     }
 }
 
+function startListening() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    if (!recognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'it-IT';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onstart = () => console.log("Microfono attivo...");
+        recognition.onerror = (e) => console.error("Errore vocale:", e.error);
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                interimTranscript += event.results[i][0].transcript;
+            }
+            const text = interimTranscript.toLowerCase();
+            console.log("[SENTITO] '", text, "'");
+
+            let found = false;
+            for (let key in rankNames) {
+                if (text.includes(key)) {
+                    targetR = rankNames[key];
+                    found = true;
+                }
+            }
+            for (let key in suitNames) {
+                if (text.includes(key)) {
+                    targetS = suitNames[key];
+                    found = true;
+                }
+            }
+
+            if (found) {
+                calculatePos();
+                updateGridActive('target-ranks', targetR);
+                updateGridActive('target-suits', targetS);
+                console.log("Aggiornato a:", targetR, targetS);
+                timerDisplay.style.opacity = "0.7";
+                setTimeout(() => timerDisplay.style.opacity = "1", 100);
+            }
+        };
+
+        recognition.onend = () => {
+            if (running) {
+                console.log("Riavvio ascolto automatico...");
+                recognition.start();
+            }
+        };
+    }
+
+    try {
+        recognition.start();
+    } catch(e) {
+        console.log("Riconoscimento già avviato o in corso.");
+    }
+}
+
 function buildUI(containerId, list, type, isTarget) {
     const container = document.getElementById(containerId);
     list.forEach(item => {
@@ -167,7 +186,7 @@ function buildUI(containerId, list, type, isTarget) {
             } else {
                 if(isTarget) targetS = item; else bottomS = item;
                 calculatePos();
-                document.getElementById('secret-panel').classList.remove('open');
+                togglePanel();
             }
             updateGridActive(containerId, item);
         };
