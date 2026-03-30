@@ -7,171 +7,214 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Timer</title>
     <style>
-        :root { --ios-bg: #000; --ios-green: #4cd964; --ios-red: #ff3b30; --ios-gray: #333; }
+        :root { 
+            --ios-bg: #000; 
+            --ios-green: #32d74b; 
+            --ios-green-bg: #162a16;
+            --ios-red: #ff453a; 
+            --ios-red-bg: #321414;
+            --ios-btn-gray: #333;
+            --ios-btn-disabled: #1c1c1e;
+            --ios-separator: #262626;
+        }
+        
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body { 
             background-color: var(--ios-bg); 
             color: white; 
+            /* Font richiesto della versione precedente */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; 
-            padding: 0;
+            margin: 0; padding: 0;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
             overflow: hidden;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Area Superiore: Timer e Pallini */
+        .top-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Distribuisce tra timer in alto e pallini in basso */
+            align-items: center;
+            padding-top: 15%; /* Numeri più in alto come richiesto */
+            padding-bottom: 30px; 
         }
 
         #timer-display { 
             font-size: 88px; 
-            font-weight: 200; 
-            margin-top: 25%;
+            font-weight: 200; /* Peso font richiesto */
             font-variant-numeric: tabular-nums;
             letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        .page-indicator {
+            display: flex;
+            gap: 7px;
+        }
+        .dot { width: 7px; height: 7px; border-radius: 50%; }
+        .dot.active { background-color: white; }
+        .dot.inactive { background-color: #2c2c2e; }
+
+        .separator {
+            width: 100%;
+            height: 0.5px;
+            background-color: var(--ios-separator);
+        }
+
+        /* Area Inferiore: Tasti e Codici */
+        .bottom-section {
+            height: 45vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 25px;
         }
 
         .controls { 
             display: flex; 
             width: 100%; 
-            justify-content: space-evenly; 
-            margin-bottom: 50px;
+            justify-content: space-between; 
+            padding: 0 25px;
+            margin-bottom: 20px;
         }
 
         .btn { 
             width: 82px; height: 82px; 
             border-radius: 50%; border: none; 
-            font-size: 17px; cursor: pointer; 
+            font-size: 17px;
             display: flex; align-items: center; justify-content: center;
             font-weight: 400;
         }
-        #reset-btn { background-color: var(--ios-gray); color: white; }
-        #start-btn { background-color: #162a16; color: var(--ios-green); }
-        #start-btn.stop { background-color: #321414; color: var(--ios-red); }
 
-        /* Area di Attivazione Camuffata con Doppia Riga - Colore Aggiornato */
+        #lap-btn { background-color: var(--ios-btn-disabled); color: #8e8e93; }
+        #lap-btn.active { background-color: var(--ios-btn-gray); color: white; }
+        #start-btn { background-color: var(--ios-green-bg); color: var(--ios-green); }
+        #start-btn.stop { background-color: var(--ios-red-bg); color: var(--ios-red); }
+
         #footer-zone {
-            width: 100%;
-            height: 80px;
+            margin-top: auto;
+            padding-bottom: env(safe-area-inset-bottom);
+            height: 85px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            position: relative;
-            cursor: pointer;
-            gap: 2px;
+            gap: 3px;
         }
         .sys-text { 
-            color: #252525; /* Grigio scuro, visibile per te, discreto per gli altri */
+            color: #252525; 
             font-size: 9px; 
             font-family: monospace;
-            letter-spacing: 1px;
-            text-transform: lowercase;
+            letter-spacing: 1.5px;
         }
 
-        /* Pannello Segreto */
         #secret-panel { 
             background: #080808; 
-            position: fixed; 
-            bottom: 0; left: 0; right: 0;
-            height: 0; 
-            visibility: hidden;
-            overflow-y: auto; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: 0; visibility: hidden;
+            transition: all 0.3s ease; 
             z-index: 999;
             border-top: 1px solid #1a1a1a;
-            padding-bottom: 40px;
-            padding-top: 20px;
         }
-        #secret-panel.open { 
-            height: 65vh; 
-            visibility: visible;
-        }
-
-        .section { margin-top: 5px; }
-        .grid-title { color: #555; font-size: 11px; margin: 8px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        #secret-panel.open { height: 65vh; visibility: visible; }
+        .grid-title { color: #555; font-size: 11px; margin: 15px 0; text-align: center; text-transform: uppercase; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 0 15px; }
         .grid button { background: #1c1c1c; border: none; color: #888; padding: 12px 0; border-radius: 8px; font-size: 15px; }
         .grid button.active { background: #c9a84c; color: black; font-weight: bold; }
-        
         .suits { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
         .suits button { background: #252525; border: none; color: #eee; font-size: 26px; width: 20%; height: 58px; border-radius: 12px; }
-
-        hr { border: 0; border-top: 1px solid #1a1a1a; margin: 20px 30px; }
     </style>
 </head>
 <body>
 
-<div id="timer-display">00:00,00</div>
+    <div class="top-section">
+        <div id="timer-display">00:00,00</div>
+        <div class="page-indicator">
+            <div class="dot active"></div>
+            <div class="dot inactive"></div>
+        </div>
+    </div>
 
-<div class="controls">
-    <button class="btn" id="reset-btn">Ripristina</button>
-    <button class="btn" id="start-btn">Avvia</button>
-</div>
+    <div class="separator"></div>
 
-<div id="footer-zone" onclick="togglePanel()">
-    <span class="sys-text" id="live-pos-code">v. 2.0.--</span>
-    <span class="sys-text">ios 26.0</span>
-</div>
+    <div class="bottom-section">
+        <div class="controls">
+            <button class="btn" id="lap-btn">Giro</button>
+            <button class="btn" id="start-btn">Avvia</button>
+        </div>
 
-<div id="secret-panel">
-    <div class="section">
+        <div id="footer-zone" onclick="togglePanel()">
+            <span class="sys-text" id="live-pos-code">v. 2.0.--</span>
+            <span class="sys-text">ios 26.0</span>
+        </div>
+    </div>
+
+    <div id="secret-panel">
         <div class="grid-title">PENSATA</div>
         <div id="target-ranks" class="grid"></div>
         <div id="target-suits" class="suits"></div>
-    </div>
-    
-    <hr>
-    
-    <div class="section">
+        <hr style="border:0; border-top:1px solid #1a1a1a; margin: 20px 30px;">
         <div class="grid-title">FONDO</div>
         <div id="bottom-ranks" class="grid"></div>
         <div id="bottom-suits" class="suits"></div>
     </div>
-</div>
 
 <script>
-    // Stack Mnemonica (Tamariz)
     const baseStack = ["4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠", "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥", "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣", "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠", "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣", "A♥", "9♦"];
     const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
     const suits = ["♣", "♥", "♦", "♠"];
 
-    // Valori predefiniti (per evitare errori al primo avvio)
     let targetR = "A", targetS = "♠", bottomR = "9", bottomS = "♦";
     let running = false, startTime, elapsed = 0, timerInterval;
+    let hasStopped = false;
+
+    const startBtn = document.getElementById('start-btn');
+    const lapBtn = document.getElementById('lap-btn');
+    const timerDisplay = document.getElementById('timer-display');
 
     function calculatePos() {
         try {
             const t = targetR + targetS;
             const b = bottomR + bottomS;
             const idxB = baseStack.indexOf(b);
-            // Rotazione dello stack in base alla carta di fondo
             const rotated = [...baseStack.slice(idxB + 1), ...baseStack.slice(0, idxB + 1)];
             const pos = rotated.indexOf(t) + 1;
-            // Aggiorna la riga segreta sopra "ios 26.0"
             document.getElementById('live-pos-code').innerText = "v. 2.0." + pos;
             return pos;
         } catch(e) { return 0; }
     }
 
-    function togglePanel() { 
-        document.getElementById('secret-panel').classList.toggle('open'); 
-    }
+    function togglePanel() { document.getElementById('secret-panel').classList.toggle('open'); }
 
-    document.getElementById('start-btn').onclick = function() {
+    startBtn.onclick = function() {
         if(!running) {
             running = true;
             startTime = Date.now() - elapsed;
-            timerInterval = setInterval(updateTime, 40); // Aggiornamento fluido (circa 25 fps)
+            timerInterval = setInterval(updateTime, 40);
             this.innerText = "Stop"; this.classList.add('stop');
+            lapBtn.innerText = "Giro"; lapBtn.classList.add('active');
+            hasStopped = false;
         } else {
             running = false;
             clearInterval(timerInterval);
             this.innerText = "Avvia"; this.classList.remove('stop');
+            lapBtn.innerText = "Ripristina";
+            hasStopped = true;
             applySmartForce();
+        }
+    };
+
+    lapBtn.onclick = function() {
+        if(!running && hasStopped) {
+            elapsed = 0;
+            hasStopped = false;
+            timerDisplay.innerText = "00:00,00";
+            this.innerText = "Giro";
+            this.classList.remove('active');
         }
     };
 
@@ -180,8 +223,7 @@
         let m = Math.floor(elapsed / 60000);
         let s = Math.floor((elapsed % 60000) / 1000);
         let c = Math.floor((elapsed % 1000) / 10);
-        document.getElementById('timer-display').innerText = 
-            `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(c).padStart(2,'0')}`;
+        timerDisplay.innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(c).padStart(2,'0')}`;
     }
 
     function applySmartForce() {
@@ -189,9 +231,6 @@
         let curTotalCents = Math.floor(elapsed / 10);
         let curSec = Math.floor(elapsed / 1000);
         let candidates = [];
-
-        // Logica 1: Somma delle singole cifre (es. 1+2+7+8=18)
-        // Cerca nei secondi circostanti per minimizzare il salto visivo
         for(let s = curSec - 1; s <= curSec + 2; s++) {
             if(s < 0) continue;
             let sStr = String(s).padStart(2,'0');
@@ -202,9 +241,6 @@
                 if((sumS + sumC) === pos) candidates.push(s * 100 + c);
             }
         }
-        
-        // Logica 2: Somma dei blocchi (Secondi + Centesimi, es. 12+06=18)
-        // Fallback se la Logica 1 non trova combinazioni valide (pos > 30)
         if(candidates.length === 0) {
             for(let s = curSec - 1; s <= curSec + 2; s++) {
                 if(s < 0) continue;
@@ -212,21 +248,13 @@
                 if(c >= 0 && c <= 99) candidates.push(s * 100 + c);
             }
         }
-
-        // Sceglie il candidato più vicino al tempo di stop reale
         if(candidates.length > 0) {
             let best = candidates.reduce((prev, curr) => Math.abs(curr - curTotalCents) < Math.abs(prev - curTotalCents) ? curr : prev);
             let fs = Math.floor(best / 100);
             let fc = best % 100;
-            // Mostra sempre minuti 00 per mimetismo
-            document.getElementById('timer-display').innerText = `00:${String(fs).padStart(2,'0')},${String(fc).padStart(2,'0')}`;
+            timerDisplay.innerText = `00:${String(fs).padStart(2,'0')},${String(fc).padStart(2,'0')}`;
         }
     }
-
-    document.getElementById('reset-btn').onclick = function() {
-        elapsed = 0; running = false; clearInterval(timerInterval);
-        document.getElementById('timer-display').innerText = "00:00,00";
-    };
 
     function buildUI(containerId, list, type, isTarget) {
         const container = document.getElementById(containerId);
@@ -234,7 +262,7 @@
             const b = document.createElement('button');
             b.innerText = item;
             b.onclick = (e) => {
-                e.stopPropagation(); // Impedisce al tocco di chiudere il pannello
+                e.stopPropagation();
                 if(type === 'ranks') {
                     if(isTarget) targetR = item; else bottomR = item;
                     Array.from(container.children).forEach(c => c.classList.remove('active'));
@@ -242,20 +270,17 @@
                 } else {
                     if(isTarget) targetS = item; else bottomS = item;
                     calculatePos();
-                    togglePanel(); // Chiude il pannello dopo la selezione del seme
+                    togglePanel();
                 }
             };
             container.appendChild(b);
         });
     }
 
-    // Inizializzazione Interfaccia
     buildUI('target-ranks', ranks, 'ranks', true);
     buildUI('target-suits', suits, 'suits', true);
     buildUI('bottom-ranks', ranks, 'ranks', false);
     buildUI('bottom-suits', suits, 'suits', false);
-
-    // Calcolo iniziale
     calculatePos();
 </script>
 </body>
