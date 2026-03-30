@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Timer</title>
+    <style>
+        body { background-color: black; color: white; font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        #timer-display { font-size: 84px; font-weight: 200; margin-top: 100px; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+        .controls { display: flex; width: 100%; justify-content: space-around; margin-bottom: 60px; }
+        .btn { width: 78px; height: 78px; border-radius: 50%; border: none; font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none; -webkit-tap-highlight-color: transparent; }
+        #reset-btn { background-color: #333; color: white; }
+        #start-btn { background-color: #1c3d1c; color: #4cd964; }
+        #start-btn.stop { background-color: #3d1c1c; color: #ff3b30; }
+        
+        /* Pannello Segreto Ottimizzato */
+        #secret-panel { background: #080808; position: fixed; bottom: 0; width: 100%; height: 0; overflow: hidden; transition: height 0.25s ease-out; z-index: 100; border-top: 1px solid #111; padding-bottom: 20px; }
+        #secret-panel.open { height: 55%; }
+        
+        .section { margin-top: 10px; }
+        .grid-title { color: #555; font-size: 11px; margin: 5px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 10px; }
+        .grid button { background: #1a1a1a; border: none; color: #999; padding: 10px 0; border-radius: 5px; font-size: 14px; -webkit-tap-highlight-color: transparent; }
+        .grid button.active { background: #c9a84c; color: black; font-weight: bold; }
+        
+        .suits { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
+        .suits button { background: #222; border: none; color: #ccc; font-size: 24px; width: 22%; height: 55px; border-radius: 10px; -webkit-tap-highlight-color: transparent; }
+        
+        /* Area Ingranaggio più grande */
+        #gear-zone { width: 100px; height: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        #gear { color: #1c1c1c; font-size: 22px; pointer-events: none; }
+        #build-info { color: #111; font-size: 10px; font-family: monospace; position: absolute; bottom: 5px; right: 10px; }
+        
+        hr { border: 0; border-top: 1px solid #222; margin: 15px 20px; }
+    </style>
+</head>
+<body>
+
+<div id="timer-display">00:00,00</div>
+
+<div class="controls">
+    <button class="btn" id="reset-btn">Ripristina</button>
+    <button class="btn" id="start-btn">Avvia</button>
+</div>
+
+<div id="gear-zone" onclick="togglePanel()">
+    <span id="gear">⚙</span>
+</div>
+<div id="build-info">v2.0.--</div>
+
+<div id="secret-panel">
+    <div class="section">
+        <div class="grid-title">PENSATA</div>
+        <div id="target-ranks" class="grid"></div>
+        <div id="target-suits" class="suits"></div>
+    </div>
+    
+    <hr>
+    
+    <div class="section">
+        <div class="grid-title">FONDO</div>
+        <div id="bottom-ranks" class="grid"></div>
+        <div id="bottom-suits" class="suits"></div>
+    </div>
+</div>
+
+<script>
+    const baseStack = ["4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠", "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥", "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣", "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠", "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣", "A♥", "9♦"];
+    const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+    const suits = ["♣", "♥", "♦", "♠"];
+
+    let targetR = "A", targetS = "♠", bottomR = "9", bottomS = "♦";
+    let running = false, startTime, elapsed = 0, timerInterval;
+
+    function calculatePos() {
+        const t = targetR + targetS;
+        const b = bottomR + bottomS;
+        const idxB = baseStack.indexOf(b);
+        const rotated = [...baseStack.slice(idxB + 1), ...baseStack.slice(0, idxB + 1)];
+        const pos = rotated.indexOf(t) + 1;
+        document.getElementById('build-info').innerText = "v2.0." + pos;
+        return pos;
+    }
+
+    function togglePanel() { 
+        document.getElementById('secret-panel').classList.toggle('open'); 
+    }
+
+    document.getElementById('start-btn').onclick = function() {
+        if(!running) {
+            running = true;
+            startTime = Date.now() - elapsed;
+            timerInterval = setInterval(updateTime, 40);
+            this.innerText = "Stop"; this.classList.add('stop');
+        } else {
+            running = false;
+            clearInterval(timerInterval);
+            this.innerText = "Avvia"; this.classList.remove('stop');
+            applySmartForce();
+        }
+    };
+
+    function updateTime() {
+        elapsed = Date.now() - startTime;
+        let m = Math.floor(elapsed / 60000);
+        let s = Math.floor((elapsed % 60000) / 1000);
+        let c = Math.floor((elapsed % 1000) / 10);
+        document.getElementById('timer-display').innerText = 
+            `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(c).padStart(2,'0')}`;
+    }
+
+    function applySmartForce() {
+        let pos = calculatePos();
+        let curTotalCents = Math.floor(elapsed / 10);
+        let curSec = Math.floor(elapsed / 1000);
+        let candidates = [];
+
+        for(let s = curSec - 1; s <= curSec + 2; s++) {
+            if(s < 0) continue;
+            let sStr = String(s).padStart(2,'0');
+            let sumS = parseInt(sStr[0]) + parseInt(sStr[1]);
+            for(let c = 0; c <= 99; c++) {
+                let cStr = String(c).padStart(2,'0');
+                let sumC = parseInt(cStr[0]) + parseInt(cStr[1]);
+                if((sumS + sumC) === pos) candidates.push(s * 100 + c);
+            }
+        }
+        
+        if(candidates.length === 0) {
+            for(let s = curSec - 1; s <= curSec + 2; s++) {
+                if(s < 0) continue;
+                let c = pos - s;
+                if(c >= 0 && c <= 99) candidates.push(s * 100 + c);
+            }
+        }
+
+        if(candidates.length > 0) {
+            let best = candidates.reduce((prev, curr) => Math.abs(curr - curTotalCents) < Math.abs(prev - curTotalCents) ? curr : prev);
+            let fs = Math.floor(best / 100);
+            let fc = best % 100;
+            document.getElementById('timer-display').innerText = `00:${String(fs).padStart(2,'0')},${String(fc).padStart(2,'0')}`;
+        }
+    }
+
+    document.getElementById('reset-btn').onclick = function() {
+        elapsed = 0; running = false; clearInterval(timerInterval);
+        document.getElementById('timer-display').innerText = "00:00,00";
+    };
+
+    function buildUI(containerId, list, type, isTarget) {
+        const container = document.getElementById(containerId);
+        list.forEach(item => {
+            const b = document.createElement('button');
+            b.innerText = item;
+            b.onclick = () => {
+                if(type === 'ranks') {
+                    if(isTarget) targetR = item; else bottomR = item;
+                    Array.from(container.children).forEach(c => c.classList.remove('active'));
+                    b.classList.add('active');
+                } else {
+                    if(isTarget) targetS = item; else bottomS = item;
+                    calculatePos();
+                    togglePanel(); // Chiude quando premi il seme
+                }
+            };
+            container.appendChild(b);
+        });
+    }
+
+    buildUI('target-ranks', ranks, 'ranks', true);
+    buildUI('target-suits', suits, 'suits', true);
+    buildUI('bottom-ranks', ranks, 'ranks', false);
+    buildUI('bottom-suits', suits, 'suits', false);
+
+    calculatePos();
+</script>
+</body>
+</html>
