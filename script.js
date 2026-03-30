@@ -12,7 +12,7 @@ const suitNames = { "fiori": "♣", "cuori": "♥", "quadri": "♦", "picche": "
 
 let targetR = "A", targetS = "♠", bottomR = "9", bottomS = "♦";
 let running = false, startTime, elapsed = 0, timerInterval, hasStopped = false;
-let recognition; // Variabile globale per gestire il microfono
+let recognition; 
 
 const startBtn = document.getElementById('start-btn');
 const lapBtn = document.getElementById('lap-btn');
@@ -58,7 +58,6 @@ startBtn.onclick = function() {
         lapBtn.innerText = "Ripristina";
         hasStopped = true;
         
-        // --- STOP DELLA REGISTRAZIONE VOCALE ---
         if (recognition) {
             recognition.stop();
             console.log("Microfono spento.");
@@ -115,6 +114,12 @@ function applySmartForce() {
 }
 
 function startListening() {
+    // Hack per tentare di zittire il sistema occupando il canale audio
+    try {
+        const dummy = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(dummy);
+    } catch(e) {}
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
@@ -124,8 +129,8 @@ function startListening() {
         recognition.continuous = true;
         recognition.interimResults = true;
 
-        recognition.onstart = () => console.log("Microfono attivo...");
-        recognition.onerror = (e) => console.error("Errore vocale:", e.error);
+        recognition.onstart = () => console.log("Ascolto...");
+        recognition.onerror = (e) => console.log("Errore:", e.error);
 
         recognition.onresult = (event) => {
             let interimTranscript = '';
@@ -133,27 +138,26 @@ function startListening() {
                 interimTranscript += event.results[i][0].transcript;
             }
             const text = interimTranscript.toLowerCase();
-            console.log("[SENTITO] '", text, "'");
+            console.log("Input:", text);
 
             let found = false;
             for (let key in rankNames) {
                 if (text.includes(key)) {
                     targetR = rankNames[key];
+                    updateGridActive('target-ranks', targetR);
                     found = true;
                 }
             }
             for (let key in suitNames) {
                 if (text.includes(key)) {
                     targetS = suitNames[key];
+                    updateGridActive('target-suits', targetS);
                     found = true;
                 }
             }
 
             if (found) {
                 calculatePos();
-                updateGridActive('target-ranks', targetR);
-                updateGridActive('target-suits', targetS);
-                console.log("Aggiornato a:", targetR, targetS);
                 timerDisplay.style.opacity = "0.7";
                 setTimeout(() => timerDisplay.style.opacity = "1", 100);
             }
@@ -161,17 +165,14 @@ function startListening() {
 
         recognition.onend = () => {
             if (running) {
-                console.log("Riavvio ascolto automatico...");
-                recognition.start();
+                try { recognition.start(); } catch(e) {}
             }
         };
     }
 
     try {
         recognition.start();
-    } catch(e) {
-        console.log("Riconoscimento già avviato o in corso.");
-    }
+    } catch(e) {}
 }
 
 function buildUI(containerId, list, type, isTarget) {
