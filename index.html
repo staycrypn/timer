@@ -52,24 +52,27 @@
         #start-btn { background-color: #162a16; color: var(--ios-green); }
         #start-btn.stop { background-color: #321414; color: var(--ios-red); }
 
-        /* Area di Attivazione Camuffata */
+        /* Area di Attivazione Camuffata con Doppia Riga - Colore Aggiornato */
         #footer-zone {
             width: 100%;
-            height: 60px;
+            height: 80px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             position: relative;
             cursor: pointer;
+            gap: 2px;
         }
-        #sys-info { 
-            color: #1a1a1a; 
-            font-size: 10px; 
+        .sys-text { 
+            color: #252525; /* Grigio scuro, visibile per te, discreto per gli altri */
+            font-size: 9px; 
             font-family: monospace;
             letter-spacing: 1px;
+            text-transform: lowercase;
         }
 
-        /* Pannello Segreto - Blindato */
+        /* Pannello Segreto */
         #secret-panel { 
             background: #080808; 
             position: fixed; 
@@ -81,19 +84,11 @@
             z-index: 999;
             border-top: 1px solid #1a1a1a;
             padding-bottom: 40px;
-            padding-top: 10px;
+            padding-top: 20px;
         }
         #secret-panel.open { 
             height: 65vh; 
             visibility: visible;
-        }
-
-        #panel-build-info {
-            color: #222;
-            font-size: 10px;
-            font-family: monospace;
-            text-align: center;
-            margin-bottom: 15px;
         }
 
         .section { margin-top: 5px; }
@@ -118,11 +113,11 @@
 </div>
 
 <div id="footer-zone" onclick="togglePanel()">
-    <span id="sys-info">iOS 26.0</span>
+    <span class="sys-text" id="live-pos-code">v. 2.0.--</span>
+    <span class="sys-text">ios 26.0</span>
 </div>
 
 <div id="secret-panel">
-    <div id="panel-build-info">build 26.0.--</div>
     <div class="section">
         <div class="grid-title">PENSATA</div>
         <div id="target-ranks" class="grid"></div>
@@ -139,10 +134,12 @@
 </div>
 
 <script>
+    // Stack Mnemonica (Tamariz)
     const baseStack = ["4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠", "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥", "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣", "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠", "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣", "A♥", "9♦"];
     const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
     const suits = ["♣", "♥", "♦", "♠"];
 
+    // Valori predefiniti (per evitare errori al primo avvio)
     let targetR = "A", targetS = "♠", bottomR = "9", bottomS = "♦";
     let running = false, startTime, elapsed = 0, timerInterval;
 
@@ -151,9 +148,11 @@
             const t = targetR + targetS;
             const b = bottomR + bottomS;
             const idxB = baseStack.indexOf(b);
+            // Rotazione dello stack in base alla carta di fondo
             const rotated = [...baseStack.slice(idxB + 1), ...baseStack.slice(0, idxB + 1)];
             const pos = rotated.indexOf(t) + 1;
-            document.getElementById('panel-build-info').innerText = "build 26.0." + pos;
+            // Aggiorna la riga segreta sopra "ios 26.0"
+            document.getElementById('live-pos-code').innerText = "v. 2.0." + pos;
             return pos;
         } catch(e) { return 0; }
     }
@@ -166,7 +165,7 @@
         if(!running) {
             running = true;
             startTime = Date.now() - elapsed;
-            timerInterval = setInterval(updateTime, 40);
+            timerInterval = setInterval(updateTime, 40); // Aggiornamento fluido (circa 25 fps)
             this.innerText = "Stop"; this.classList.add('stop');
         } else {
             running = false;
@@ -191,6 +190,8 @@
         let curSec = Math.floor(elapsed / 1000);
         let candidates = [];
 
+        // Logica 1: Somma delle singole cifre (es. 1+2+7+8=18)
+        // Cerca nei secondi circostanti per minimizzare il salto visivo
         for(let s = curSec - 1; s <= curSec + 2; s++) {
             if(s < 0) continue;
             let sStr = String(s).padStart(2,'0');
@@ -202,6 +203,8 @@
             }
         }
         
+        // Logica 2: Somma dei blocchi (Secondi + Centesimi, es. 12+06=18)
+        // Fallback se la Logica 1 non trova combinazioni valide (pos > 30)
         if(candidates.length === 0) {
             for(let s = curSec - 1; s <= curSec + 2; s++) {
                 if(s < 0) continue;
@@ -210,10 +213,12 @@
             }
         }
 
+        // Sceglie il candidato più vicino al tempo di stop reale
         if(candidates.length > 0) {
             let best = candidates.reduce((prev, curr) => Math.abs(curr - curTotalCents) < Math.abs(prev - curTotalCents) ? curr : prev);
             let fs = Math.floor(best / 100);
             let fc = best % 100;
+            // Mostra sempre minuti 00 per mimetismo
             document.getElementById('timer-display').innerText = `00:${String(fs).padStart(2,'0')},${String(fc).padStart(2,'0')}`;
         }
     }
@@ -229,7 +234,7 @@
             const b = document.createElement('button');
             b.innerText = item;
             b.onclick = (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Impedisce al tocco di chiudere il pannello
                 if(type === 'ranks') {
                     if(isTarget) targetR = item; else bottomR = item;
                     Array.from(container.children).forEach(c => c.classList.remove('active'));
@@ -237,18 +242,20 @@
                 } else {
                     if(isTarget) targetS = item; else bottomS = item;
                     calculatePos();
-                    togglePanel();
+                    togglePanel(); // Chiude il pannello dopo la selezione del seme
                 }
             };
             container.appendChild(b);
         });
     }
 
+    // Inizializzazione Interfaccia
     buildUI('target-ranks', ranks, 'ranks', true);
     buildUI('target-suits', suits, 'suits', true);
     buildUI('bottom-ranks', ranks, 'ranks', false);
     buildUI('bottom-suits', suits, 'suits', false);
 
+    // Calcolo iniziale
     calculatePos();
 </script>
 </body>
