@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cronometro">
     <title>Timer</title>
     <style>
         :root { 
@@ -16,8 +17,8 @@
             --ios-btn-gray: #333;
             --ios-btn-disabled: #1c1c1e;
             --ios-separator: #1c1c1e;
-            --ios-tab-bar-bg: #161616; /* Grigio scuro della barra */
-            --ios-tab-active-bg: #2c2c2e; /* Cerchio grigio icona attiva */
+            --ios-tab-bar-bg: #161616;
+            --ios-tab-active-bg: #2c2c2e;
             --ios-orange: #ff9f0a;
             --ios-tab-gray: #8e8e93;
         }
@@ -33,6 +34,8 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .top-section {
@@ -89,7 +92,7 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 15px; /* Spazio dal fondo */
+            padding-bottom: 10px;
         }
 
         #footer-zone {
@@ -100,16 +103,16 @@
 
         .sys-text { color: #0a0a0a; font-size: 10px; font-family: monospace; }
 
-        /* --- TAB BAR A PILLOLA (STYLE IOS 17/18) --- */
         .tab-bar-container {
-            width: 92%; /* Non tocca i bordi */
+            width: 92%;
             height: 65px;
             background-color: var(--ios-tab-bar-bg);
-            border-radius: 35px; /* Molto tonda */
+            border-radius: 35px;
             display: flex;
             justify-content: space-around;
             align-items: center;
             padding: 0 10px;
+            margin-bottom: 5px;
         }
 
         .tab-item {
@@ -213,7 +216,6 @@
     </div>
 
 <script>
-    // Logica JS identica a prima (molto affidabile)
     const baseStack = ["4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠", "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥", "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣", "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠", "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣", "A♥", "9♦"];
     const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
     const suits = ["♣", "♥", "♦", "♠"];
