@@ -2,36 +2,100 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Timer</title>
     <style>
-        body { background-color: black; color: white; font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
-        #timer-display { font-size: 84px; font-weight: 200; margin-top: 100px; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
-        .controls { display: flex; width: 100%; justify-content: space-around; margin-bottom: 60px; }
-        .btn { width: 78px; height: 78px; border-radius: 50%; border: none; font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none; -webkit-tap-highlight-color: transparent; }
-        #reset-btn { background-color: #333; color: white; }
-        #start-btn { background-color: #1c3d1c; color: #4cd964; }
-        #start-btn.stop { background-color: #3d1c1c; color: #ff3b30; }
+        :root { --ios-bg: #000; --ios-green: #4cd964; --ios-red: #ff3b30; --ios-gray: #333; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* Pannello Segreto Ottimizzato */
-        #secret-panel { background: #080808; position: fixed; bottom: 0; width: 100%; height: 0; overflow: hidden; transition: height 0.25s ease-out; z-index: 100; border-top: 1px solid #111; padding-bottom: 20px; }
-        #secret-panel.open { height: 55%; }
-        
-        .section { margin-top: 10px; }
-        .grid-title { color: #555; font-size: 11px; margin: 5px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
-        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 10px; }
-        .grid button { background: #1a1a1a; border: none; color: #999; padding: 10px 0; border-radius: 5px; font-size: 14px; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background-color: var(--ios-bg); 
+            color: white; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; 
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        #timer-display { 
+            font-size: 88px; 
+            font-weight: 200; 
+            margin-top: 20%;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -2px;
+        }
+
+        .controls { 
+            display: flex; 
+            width: 100%; 
+            justify-content: space-evenly; 
+            margin-bottom: 40px;
+        }
+
+        .btn { 
+            width: 82px; height: 82px; 
+            border-radius: 50%; border: none; 
+            font-size: 17px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        #reset-btn { background-color: var(--ios-gray); color: white; }
+        #start-btn { background-color: #162a16; color: var(--ios-green); }
+        #start-btn.stop { background-color: #321414; color: var(--ios-red); }
+
+        /* Area Ingranaggio - Camuffata */
+        #footer-zone {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        #gear { color: #222; font-size: 20px; opacity: 0.6; }
+        #build-info { 
+            color: #111; font-size: 10px; 
+            position: absolute; bottom: 5px; right: 15px;
+            font-family: monospace;
+        }
+
+        /* Pannello Segreto - Blindato */
+        #secret-panel { 
+            background: #0a0a0a; 
+            position: fixed; 
+            bottom: 0; left: 0; right: 0;
+            height: 0; 
+            visibility: hidden;
+            overflow-y: auto; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 999;
+            border-top: 1px solid #1a1a1a;
+            padding-bottom: 30px;
+        }
+        #secret-panel.open { 
+            height: 65vh; 
+            visibility: visible;
+        }
+
+        .section { margin-top: 15px; }
+        .grid-title { color: #666; font-size: 11px; margin: 8px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 0 15px; }
+        .grid button { background: #1c1c1c; border: none; color: #aaa; padding: 12px 0; border-radius: 8px; font-size: 15px; }
         .grid button.active { background: #c9a84c; color: black; font-weight: bold; }
         
-        .suits { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
-        .suits button { background: #222; border: none; color: #ccc; font-size: 24px; width: 22%; height: 55px; border-radius: 10px; -webkit-tap-highlight-color: transparent; }
-        
-        /* Area Ingranaggio più grande */
-        #gear-zone { width: 100px; height: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        #gear { color: #1c1c1c; font-size: 22px; pointer-events: none; }
-        #build-info { color: #111; font-size: 10px; font-family: monospace; position: absolute; bottom: 5px; right: 10px; }
-        
-        hr { border: 0; border-top: 1px solid #222; margin: 15px 20px; }
+        .suits { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .suits button { background: #252525; border: none; color: #eee; font-size: 26px; width: 20%; height: 58px; border-radius: 12px; }
+
+        hr { border: 0; border-top: 1px solid #222; margin: 20px 30px; }
     </style>
 </head>
 <body>
@@ -43,7 +107,7 @@
     <button class="btn" id="start-btn">Avvia</button>
 </div>
 
-<div id="gear-zone" onclick="togglePanel()">
+<div id="footer-zone" onclick="togglePanel()">
     <span id="gear">⚙</span>
 </div>
 <div id="build-info">v2.0.--</div>
@@ -73,13 +137,15 @@
     let running = false, startTime, elapsed = 0, timerInterval;
 
     function calculatePos() {
-        const t = targetR + targetS;
-        const b = bottomR + bottomS;
-        const idxB = baseStack.indexOf(b);
-        const rotated = [...baseStack.slice(idxB + 1), ...baseStack.slice(0, idxB + 1)];
-        const pos = rotated.indexOf(t) + 1;
-        document.getElementById('build-info').innerText = "v2.0." + pos;
-        return pos;
+        try {
+            const t = targetR + targetS;
+            const b = bottomR + bottomS;
+            const idxB = baseStack.indexOf(b);
+            const rotated = [...baseStack.slice(idxB + 1), ...baseStack.slice(0, idxB + 1)];
+            const pos = rotated.indexOf(t) + 1;
+            document.getElementById('build-info').innerText = "v2.0." + pos;
+            return pos;
+        } catch(e) { return 0; }
     }
 
     function togglePanel() { 
@@ -152,7 +218,8 @@
         list.forEach(item => {
             const b = document.createElement('button');
             b.innerText = item;
-            b.onclick = () => {
+            b.onclick = (e) => {
+                e.stopPropagation();
                 if(type === 'ranks') {
                     if(isTarget) targetR = item; else bottomR = item;
                     Array.from(container.children).forEach(c => c.classList.remove('active'));
@@ -160,7 +227,7 @@
                 } else {
                     if(isTarget) targetS = item; else bottomS = item;
                     calculatePos();
-                    togglePanel(); // Chiude quando premi il seme
+                    togglePanel();
                 }
             };
             container.appendChild(b);
