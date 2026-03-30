@@ -29,7 +29,7 @@
         #timer-display { 
             font-size: 88px; 
             font-weight: 200; 
-            margin-top: 20%;
+            margin-top: 25%;
             font-variant-numeric: tabular-nums;
             letter-spacing: -2px;
         }
@@ -38,7 +38,7 @@
             display: flex; 
             width: 100%; 
             justify-content: space-evenly; 
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         .btn { 
@@ -46,31 +46,32 @@
             border-radius: 50%; border: none; 
             font-size: 17px; cursor: pointer; 
             display: flex; align-items: center; justify-content: center;
+            font-weight: 400;
         }
         #reset-btn { background-color: var(--ios-gray); color: white; }
         #start-btn { background-color: #162a16; color: var(--ios-green); }
         #start-btn.stop { background-color: #321414; color: var(--ios-red); }
 
-        /* Area Ingranaggio - Camuffata */
+        /* Area di Attivazione Camuffata */
         #footer-zone {
             width: 100%;
             height: 60px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             position: relative;
+            cursor: pointer;
         }
-        #gear { color: #222; font-size: 20px; opacity: 0.6; }
-        #build-info { 
-            color: #111; font-size: 10px; 
-            position: absolute; bottom: 5px; right: 15px;
+        #sys-info { 
+            color: #1a1a1a; 
+            font-size: 10px; 
             font-family: monospace;
+            letter-spacing: 1px;
         }
 
         /* Pannello Segreto - Blindato */
         #secret-panel { 
-            background: #0a0a0a; 
+            background: #080808; 
             position: fixed; 
             bottom: 0; left: 0; right: 0;
             height: 0; 
@@ -79,23 +80,32 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             z-index: 999;
             border-top: 1px solid #1a1a1a;
-            padding-bottom: 30px;
+            padding-bottom: 40px;
+            padding-top: 10px;
         }
         #secret-panel.open { 
             height: 65vh; 
             visibility: visible;
         }
 
-        .section { margin-top: 15px; }
-        .grid-title { color: #666; font-size: 11px; margin: 8px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        #panel-build-info {
+            color: #222;
+            font-size: 10px;
+            font-family: monospace;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .section { margin-top: 5px; }
+        .grid-title { color: #555; font-size: 11px; margin: 8px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 0 15px; }
-        .grid button { background: #1c1c1c; border: none; color: #aaa; padding: 12px 0; border-radius: 8px; font-size: 15px; }
+        .grid button { background: #1c1c1c; border: none; color: #888; padding: 12px 0; border-radius: 8px; font-size: 15px; }
         .grid button.active { background: #c9a84c; color: black; font-weight: bold; }
         
         .suits { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
         .suits button { background: #252525; border: none; color: #eee; font-size: 26px; width: 20%; height: 58px; border-radius: 12px; }
 
-        hr { border: 0; border-top: 1px solid #222; margin: 20px 30px; }
+        hr { border: 0; border-top: 1px solid #1a1a1a; margin: 20px 30px; }
     </style>
 </head>
 <body>
@@ -108,11 +118,11 @@
 </div>
 
 <div id="footer-zone" onclick="togglePanel()">
-    <span id="gear">⚙</span>
+    <span id="sys-info">iOS 26.0</span>
 </div>
-<div id="build-info">v2.0.--</div>
 
 <div id="secret-panel">
+    <div id="panel-build-info">build 26.0.--</div>
     <div class="section">
         <div class="grid-title">PENSATA</div>
         <div id="target-ranks" class="grid"></div>
@@ -143,7 +153,7 @@
             const idxB = baseStack.indexOf(b);
             const rotated = [...baseStack.slice(idxB + 1), ...baseStack.slice(0, idxB + 1)];
             const pos = rotated.indexOf(t) + 1;
-            document.getElementById('build-info').innerText = "v2.0." + pos;
+            document.getElementById('panel-build-info').innerText = "build 26.0." + pos;
             return pos;
         } catch(e) { return 0; }
     }
