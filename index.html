@@ -15,7 +15,7 @@
             --ios-red-bg: #321414;
             --ios-btn-gray: #333;
             --ios-btn-disabled: #1c1c1e;
-            --ios-separator: #262626;
+            --ios-separator: #1c1c1e; /* Grigio molto scuro come originale */
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -23,7 +23,7 @@
         body { 
             background-color: var(--ios-bg); 
             color: white; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             margin: 0; padding: 0;
             height: 100vh;
             display: flex;
@@ -31,41 +31,45 @@
             overflow: hidden;
         }
 
-        /* META' SUPERIORE (50% altezza) */
-        .top-half {
-            height: 50vh;
+        /* Sezione Superiore: Timer e Controlli */
+        .top-section {
+            height: 48vh; /* Quasi metà schermo */
             display: flex;
             flex-direction: column;
-            justify-content: flex-end; 
+            justify-content: flex-end;
             align-items: center;
-            padding-bottom: 30px; /* Spazio dai tasti alla linea centrale */
-        }
-
-        .timer-box {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding-bottom: 20px; /* Alza leggermente il timer rispetto ai tasti */
+            padding-bottom: 25px;
         }
 
         #timer-display { 
-            font-size: 88px; 
+            font-size: 82px; 
             font-weight: 200; 
             font-variant-numeric: tabular-nums;
-            letter-spacing: -2px;
-            line-height: 1;
+            letter-spacing: -1px;
+            margin-bottom: auto;
+            margin-top: auto;
+            padding-top: 40px;
         }
 
-        /* Container Tasti + Pallini in mezzo */
-        .controls-container {
+        .controls-row {
             display: flex;
             width: 100%;
-            align-items: center;
             justify-content: space-between;
-            padding: 0 25px;
+            align-items: center;
+            padding: 0 15px;
         }
+
+        .btn { 
+            width: 80px; height: 80px; 
+            border-radius: 50%; border: none; 
+            font-size: 17px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #lap-btn { background-color: var(--ios-btn-disabled); color: #ebebf5; opacity: 0.6; }
+        #lap-btn.active { background-color: var(--ios-btn-gray); opacity: 1; }
+        #start-btn { background-color: var(--ios-green-bg); color: var(--ios-green); }
+        #start-btn.stop { background-color: var(--ios-red-bg); color: var(--ios-red); }
 
         .page-indicator {
             display: flex;
@@ -73,63 +77,50 @@
         }
         .dot { width: 7px; height: 7px; border-radius: 50%; }
         .dot.active { background-color: white; }
-        .dot.inactive { background-color: #2c2c2e; }
+        .dot.inactive { background-color: #333; }
 
-        .btn { 
-            width: 82px; height: 82px; 
-            border-radius: 50%; border: none; 
-            font-size: 17.5px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 400;
-        }
-
-        /* LINEA CENTRALE */
+        /* La Linea Grigia */
         .separator {
-            width: 100%;
+            width: 92%; /* Non tocca i bordi come in iOS */
             height: 0.5px;
             background-color: var(--ios-separator);
+            margin: 0 auto;
         }
 
-        /* META' INFERIORE (50% altezza) */
-        .bottom-half {
-            height: 50vh;
+        /* Sezione Inferiore: Vuoto e Footer Segreto */
+        .bottom-section {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end;
             align-items: center;
+            padding-bottom: 60px; /* Spazio per la finta tab bar */
         }
 
         #footer-zone {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
+            padding: 20px;
+            text-align: center;
             cursor: pointer;
         }
 
         .sys-text { 
-            color: #252525; 
-            font-size: 9px; 
+            color: #1a1a1a; /* Quasi invisibile */
+            font-size: 10px; 
             font-family: monospace;
-            letter-spacing: 1.5px;
+            display: block;
         }
 
-        #lap-btn { background-color: var(--ios-btn-disabled); color: #8e8e93; }
-        #lap-btn.active { background-color: var(--ios-btn-gray); color: white; }
-        #start-btn { background-color: var(--ios-green-bg); color: var(--ios-green); }
-        #start-btn.stop { background-color: var(--ios-red-bg); color: var(--ios-red); }
-
+        /* Pannello Segreto */
         #secret-panel { 
             background: #080808; 
             position: fixed; bottom: 0; left: 0; right: 0;
             height: 0; visibility: hidden;
-            transition: all 0.3s ease; 
+            transition: height 0.3s ease; 
             z-index: 999;
             border-top: 1px solid #1a1a1a;
+            overflow-y: auto;
         }
-        #secret-panel.open { height: 65vh; visibility: visible; }
+        #secret-panel.open { height: 70vh; visibility: visible; }
         .grid-title { color: #555; font-size: 11px; margin: 15px 0; text-align: center; text-transform: uppercase; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 0 15px; }
         .grid button { background: #1c1c1c; border: none; color: #888; padding: 12px 0; border-radius: 8px; font-size: 15px; }
@@ -140,12 +131,10 @@
 </head>
 <body>
 
-    <div class="top-half">
-        <div class="timer-box">
-            <div id="timer-display">00:00,00</div>
-        </div>
+    <div class="top-section">
+        <div id="timer-display">00:00,00</div>
         
-        <div class="controls-container">
+        <div class="controls-row">
             <button class="btn" id="lap-btn">Giro</button>
             <div class="page-indicator">
                 <div class="dot active"></div>
@@ -157,7 +146,7 @@
 
     <div class="separator"></div>
 
-    <div class="bottom-half">
+    <div class="bottom-section">
         <div id="footer-zone" onclick="togglePanel()">
             <span class="sys-text" id="live-pos-code">v. 2.0.--</span>
             <span class="sys-text">ios 26.0</span>
@@ -175,10 +164,10 @@
     </div>
 
 <script>
+    // La logica JavaScript rimane la stessa delle versioni precedenti
     const baseStack = ["4♣", "2♥", "7♦", "3♣", "4♥", "6♦", "A♠", "5♥", "9♠", "2♠", "Q♥", "3♦", "Q♣", "8♥", "6♠", "5♠", "9♥", "K♣", "2♦", "J♥", "3♠", "8♠", "6♥", "10♣", "5♦", "K♦", "2♣", "3♥", "8♦", "5♣", "K♠", "J♦", "8♣", "10♠", "K♥", "J♣", "7♠", "10♥", "A♦", "4♠", "7♥", "4♦", "A♣", "9♣", "J♠", "Q♦", "7♣", "Q♠", "10♦", "6♣", "A♥", "9♦"];
     const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
     const suits = ["♣", "♥", "♦", "♠"];
-
     let targetR = "A", targetS = "♠", bottomR = "9", bottomS = "♦";
     let running = false, startTime, elapsed = 0, timerInterval;
     let hasStopped = false;
@@ -186,8 +175,6 @@
     const startBtn = document.getElementById('start-btn');
     const lapBtn = document.getElementById('lap-btn');
     const timerDisplay = document.getElementById('timer-display');
-
-    function triggerHaptic() { if (navigator.vibrate) navigator.vibrate(10); }
 
     function calculatePos() {
         try {
@@ -201,13 +188,9 @@
         } catch(e) { return 0; }
     }
 
-    function togglePanel() { 
-        triggerHaptic();
-        document.getElementById('secret-panel').classList.toggle('open'); 
-    }
+    function togglePanel() { document.getElementById('secret-panel').classList.toggle('open'); }
 
     startBtn.onclick = function() {
-        triggerHaptic();
         if(!running) {
             running = true;
             startTime = Date.now() - elapsed;
@@ -226,7 +209,6 @@
     };
 
     lapBtn.onclick = function() {
-        triggerHaptic();
         if(!running && hasStopped) {
             elapsed = 0;
             hasStopped = false;
@@ -281,7 +263,6 @@
             b.innerText = item;
             b.onclick = (e) => {
                 e.stopPropagation();
-                triggerHaptic();
                 if(type === 'ranks') {
                     if(isTarget) targetR = item; else bottomR = item;
                     Array.from(container.children).forEach(c => c.classList.remove('active'));
